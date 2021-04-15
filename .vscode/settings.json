@@ -1,0 +1,13 @@
+{
+	"java.configuration.updateBuildConfiguration": "disabled",
+	"editor.tabSize": 2,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	},
+	"files.eol": "\n",
+	"files.insertFinalNewline": true,
+	"eslint.validate": ["javascript", "javascriptreact"],
+	"eslint.options": {
+		"extensions": [".js", ".jsx"]
+	},
+}

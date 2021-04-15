@@ -1,0 +1,77 @@
+---
+format_version: '8'
+default_step_lib_source: 'https://github.com/bitrise-io/bitrise-steplib.git'
+project_type: react-native
+trigger_map:
+- push_branch: '*'
+  workflow: primary
+- pull_request_source_branch: '*'
+  workflow: primary
+workflows:
+  primary:
+    steps:
+    - telegram-notify@1:
+        inputs:
+        - telegram_chat_id: $QuizcastTeamChatId
+        - custom_message: New Quizcast release was processed and ready for testing.
+        - download_url: Download the release from the TestFlight or Play Console
+        - telegram_bot_token: $QuizcastBotToken
+        is_always_run: false
+    - activate-ssh-key@4:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@4: {}
+    - install-react-native@0:
+        inputs:
+        - version: 2.0.1
+    - script@1:
+        title: Do anything with Script step
+    - npm@1:
+        inputs:
+        - command: install
+    - react-native-bundle@1:
+        inputs:
+        - entry_file: index.js
+    - cocoapods-install@1:
+        inputs:
+        - podfile_path: ./ios/Podfile
+    - certificate-and-profile-installer@1: {}
+    - set-xcode-build-number@1:
+        inputs:
+        - plist_path: $BITRISE_SOURCE_DIR/ios/quizcast_nativev3/Info.plist
+        - build_short_version_string: 1.200.$BITRISE_BUILD_NUMBER
+        - build_version_offset: ''
+    - xcode-archive@2:
+        inputs:
+        - project_path: $BITRISE_SOURCE_DIR/ios/quizcast_nativev3.xcworkspace
+        - scheme: quizcast_nativev3
+        - export_method: app-store
+        - configuration: ''
+    - deploy-to-itunesconnect-application-loader@0:
+        inputs:
+        - api_issuer: d1225049-6768-41c4-835f-3cbee138da1c
+        - api_key_path: $BITRISEIO_AppConnectP8Key_URL
+    - deploy-to-bitrise-io@1: {}
+    after_run: []
+    meta:
+      bitrise.io:
+        stack: osx-xcode-11.7.x
+app:
+  envs:
+  - opts:
+      is_expand: false
+    PROJECT_LOCATION: android
+  - opts:
+      is_expand: false
+    MODULE: app
+  - opts:
+      is_expand: false
+    VARIANT: Release
+  - opts:
+      is_expand: false
+    BITRISE_PROJECT_PATH: app
+  - opts:
+      is_expand: false
+    BITRISE_SCHEME: Release
+  - opts:
+      is_expand: false
+    BITRISE_EXPORT_METHOD: app-store

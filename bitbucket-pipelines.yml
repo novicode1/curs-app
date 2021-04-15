@@ -1,0 +1,31 @@
+#bitbucket-pipelines.yml
+image: mingc/android-build-box:latest
+
+definitions:
+  services:
+    docker:
+      memory: 7128
+
+pipelines:
+  default:
+    - step:
+        size: 2x
+        name: Build React Project
+        script:
+          - npm install                    
+          - npm install -g jetifier
+          - npm run-script bundle:android
+          - jetifier
+          - rm -rf ./android/app/src/main/res/drawable-*
+          - rm -rf ./android/app/src/main/res/raw
+          - cd android         
+          - echo $BITBUCKET_BUILD_NUMBER    
+          - ./gradlew assembleRelease -PprojVersion=1.0.$BITBUCKET_BUILD_NUMBER              
+          - ls                            
+          - echo $GOOGLE_API_KEY_JSON > google_play_api_key.json          
+          - echo 'Publishing to the Play Console...'
+          - ./gradlew publishApk -PprojVersion=1.0.$BITBUCKET_BUILD_NUMBER || true
+          - echo 'Done.'
+        artifacts:
+          - android/app/build/**    
+          - android/app/build/outputs/apk/release/*.apk    
